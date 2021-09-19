@@ -1,16 +1,33 @@
-# This is a sample Python script.
+# Chaque action ne peut être achetée qu'une seule fois.
+# Nous ne pouvons pas acheter une fraction d'action.
+# Nous pouvons dépenser au maximum 500 euros par client.
 
-# Press Maj+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from csv import DictReader
+from csv import reader
+import operator
+import os
+
+# skip first line i.e. read header first and then iterate over each row od csv as a list
+cwd = os.getcwd()
+desktop = os.path.join(cwd, "data")
+files = os.listdir(desktop)
+data = []
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+for file in files:
+    if file is file.endswith('.csv'):
+        print("Not a CSV file.")
+        pass
+    else:
+        with open('data/'+file, 'r') as read_obj:
+            csv_reader = reader(read_obj)
+            # sorted(csv_reader, key = lambda x:float(x), reverse=False)
+            sortedlist = sorted(csv_reader, key=operator.itemgetter(1), reverse=False)
+            for row in sortedlist:
+                data.append(row)
 
+client_purchases = []
+client_credit = float(500)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+for item in data:
+    print(item[0] + ' | ' + item[1] + ' | ' + item[2])
