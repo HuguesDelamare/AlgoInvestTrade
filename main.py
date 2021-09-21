@@ -7,27 +7,67 @@ from csv import reader
 import operator
 import os
 
-# skip first line i.e. read header first and then iterate over each row od csv as a list
-cwd = os.getcwd()
-desktop = os.path.join(cwd, "data")
-files = os.listdir(desktop)
-data = []
+
+class Algorithm:
+    def __init__(self):
+        self.data = {
+            'data': []
+        }
+        self.client_shares_bought = []
+        self.client_wallet = 500
+
+    def get_csv_files(self):
+        cwd = os.getcwd()
+        desktop = os.path.join(cwd, "data")
+        files = os.listdir(desktop)
+        self.get_all_data_from_csv(files)
+
+    def get_all_data_from_csv(self, files):
+        for file in files:
+            if not file.endswith('.csv'):
+                print("Not a CSV file.")
+                pass
+            else:
+                with open('data/'+file, 'r') as read_obj:
+                    csv_reader = reader(read_obj)
+                    for row in csv_reader:
+                        try:
+                            if float(row[1]) == 0:
+                                serialized_data = self.serializing_data(row, 0)
+                                self.data['data'].append(serialized_data)
+                                self.client_shares_bought.append(serialized_data)
+                            elif float(row[1]) <= 0:
+                                self.client_wallet += abs(float(row[1]))
+                                serialized_data = self.serializing_data(row, 0)
+                                self.client_shares_bought.append(serialized_data)
+                            else:
+                                ratio = self.calculating_ratio(row)
+                                serialized_data = self.serializing_data(row, ratio)
+                                self.data['data'].append(serialized_data)
+                        except ValueError:
+                            pass
+        print('Wallet: ' + str(self.client_wallet))
+        print(self.client_shares_bought)
+        self.buy_shares(self.data)
+
+    def serializing_data(self, data_row, ratio):
+        serialized_data = {
+            'name': data_row[0],
+            'price': float(data_row[1]),
+            'profit': float(data_row[2]),
+            'ratio': ratio
+        }
+        return serialized_data
+
+    def calculating_ratio(self, data_row):
+        ratio = float(data_row[2]) / float(data_row[1])
+        return ratio
+
+    def buy_shares(self, data):
+        data['data'].sort(key=lambda e: e['ratio'], reverse=True)
+        for item in data['data']:
+            print(item)
 
 
-for file in files:
-    if file is file.endswith('.csv'):
-        print("Not a CSV file.")
-        pass
-    else:
-        with open('data/'+file, 'r') as read_obj:
-            csv_reader = reader(read_obj)
-            # sorted(csv_reader, key = lambda x:float(x), reverse=False)
-            sortedlist = sorted(csv_reader, key=operator.itemgetter(1), reverse=False)
-            for row in sortedlist:
-                data.append(row)
-
-client_purchases = []
-client_credit = float(500)
-
-for item in data:
-    print(item[0] + ' | ' + item[1] + ' | ' + item[2])
+if __name__ == "__main__":
+    Algorithm().get_csv_files()
