@@ -6,6 +6,7 @@ from csv import DictReader
 from csv import reader
 import operator
 import os
+import cProfile
 
 
 class Algorithm:
@@ -34,7 +35,6 @@ class Algorithm:
                         try:
                             if float(row[1]) == 0:
                                 serialized_data = self.serializing_data(row, 0)
-                                self.data['data'].append(serialized_data)
                                 self.client_shares_bought.append(serialized_data)
                             elif float(row[1]) <= 0:
                                 self.client_wallet += abs(float(row[1]))
@@ -47,7 +47,6 @@ class Algorithm:
                         except ValueError:
                             pass
         print('Wallet: ' + str(self.client_wallet))
-        print(self.client_shares_bought)
         self.buy_shares(self.data)
 
     def serializing_data(self, data_row, ratio):
@@ -65,9 +64,23 @@ class Algorithm:
 
     def buy_shares(self, data):
         data['data'].sort(key=lambda e: e['ratio'], reverse=True)
-        for item in data['data']:
-            print(item)
+        if self.client_wallet > 0:
+            for item in data['data']:
+                if item['price'] <= self.client_wallet:
+                    self.client_shares_bought.append(item)
+                    self.client_wallet -= item['price']
+                else:
+                    pass
+        else:
+            print('no money available')
+
+    def display_shares_bought(self, client_money, client_shares_list):
+        for share in client_shares_list:
+            print(share)
+        print(client_money)
 
 
 if __name__ == "__main__":
     Algorithm().get_csv_files()
+    # cProfile.run('Algorithm().get_csv_files()')
+
