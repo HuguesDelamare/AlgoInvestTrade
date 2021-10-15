@@ -1,13 +1,13 @@
 # Chaque action ne peut être achetée qu'une seule fois.
 # Nous ne pouvons pas acheter une fraction d'action.
 # Nous pouvons dépenser au maximum 500 euros par client.
+import itertools
 
 from csv import DictReader
 from csv import reader
 import operator
 import os
-import cProfile
-
+import time
 
 class Algorithm:
     def __init__(self):
@@ -30,57 +30,35 @@ class Algorithm:
                 pass
             else:
                 with open('data/'+file, 'r') as read_obj:
+                    list_of_row = []
                     csv_reader = reader(read_obj)
                     for row in csv_reader:
-                        try:
-                            if float(row[1]) == 0:
-                                serialized_data = self.serializing_data(row, 0)
-                                self.client_shares_bought.append(serialized_data)
-                            elif float(row[1]) <= 0:
-                                self.client_wallet += abs(float(row[1]))
-                                serialized_data = self.serializing_data(row, 0)
-                                self.client_shares_bought.append(serialized_data)
-                            else:
-                                ratio = self.calculating_ratio(row)
-                                serialized_data = self.serializing_data(row, ratio)
-                                self.data['data'].append(serialized_data)
-                        except ValueError:
-                            pass
-        print('Wallet: ' + str(self.client_wallet))
-        self.buy_shares(self.data)
+                        list_of_row.append(row)
+                    self.combination(list_of_row, 2)
 
-    def serializing_data(self, data_row, ratio):
-        serialized_data = {
-            'name': data_row[0],
-            'price': float(data_row[1]),
-            'profit': float(data_row[2]),
-            'ratio': ratio
-        }
-        return serialized_data
-
-    def calculating_ratio(self, data_row):
-        ratio = float(data_row[2]) / float(data_row[1])
-        return ratio
-
-    def buy_shares(self, data):
-        data['data'].sort(key=lambda e: e['ratio'], reverse=True)
-        if self.client_wallet > 0:
-            for item in data['data']:
-                if item['price'] <= self.client_wallet:
-                    self.client_shares_bought.append(item)
-                    self.client_wallet -= item['price']
-                else:
-                    pass
-        else:
-            print('no money available')
-
-    def display_shares_bought(self, client_money, client_shares_list):
-        for share in client_shares_list:
-            print(share)
-        print(client_money)
+    def combination(self, iterable, n):
+        iterable_row_count = len(iterable)-1
+        indices = list(range(n))
+        # Parcours les rows de 0 a n, ex : ('Share-XJDT', '0.0', '37.11')
+        yield tuple(iterable[i+1] for i in indices)
+        while True:
+            # 0 1 2 3 4 5 etc
+            for i in reversed(range(n)):
+                # ex : if 5 != 5 + 1001 - 6 = 1000
+                if indices[i] != i + iterable_row_count - n:
+                    break
+            else:
+                return
+            indices[i] += 1
+            for j in range(i+1, n):
+                indices[j] = indices[j-1] + 1
+            yield tuple(iterable[i] for i in indices)
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     Algorithm().get_csv_files()
-    # cProfile.run('Algorithm().get_csv_files()')
+    print("--- %s seconds ---" % (time.time() - start_time))
 
+
+# SAC A DOS = 1 etape a la fois, se coupe sur les montants utilisés
